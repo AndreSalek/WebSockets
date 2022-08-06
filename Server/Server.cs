@@ -1,4 +1,6 @@
 ﻿using System;
+using System.Collections;
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 
@@ -10,7 +12,6 @@ namespace Server
     class Server : WebSocketServer
     {
         private static readonly string port = "8000";
-        public int idLength = 4;
         public event EventHandler ServerStateChange;
         
         public Server() : base($"ws://localhost:{port}")
@@ -42,27 +43,15 @@ namespace Server
             return stateString;
         }
         //Creates new array of short IDs that are needed for console output
-        public async Task<string[]> CreateShortIDArrayAsync()
+        public IEnumerable<string> CreateShortIDArray(int idLength)
         {
-            try
+            foreach (var client in WebSocketServices["/Connect"].Sessions.ActiveIDs)
             {
-                string[] id = new string[WebSocketServices["/Connect"].Sessions.ActiveIDs.Count()];
-                var i = 0;
-                foreach (var client in WebSocketServices["/Connect"].Sessions.ActiveIDs)
-                {
-                    id[i] = client.Remove(idLength);
-                    i++;
-                }
-                return id;
+                yield return client.Remove(idLength);
             }
-            catch (NullReferenceException ex)
-            {
-                Console.WriteLine("No clients connected \n " + ex);
-            }
-            return new string[0];
         }
         //Input string array, returns true if it contains any duplicates
-        public async Task<bool> CheckforDuplicatesAsync(string[] array)
+        public bool CheckforDuplicates(IEnumerable<string> array)
         {
             var duplicates = array
              .GroupBy(p => p)
@@ -71,7 +60,7 @@ namespace Server
             return (duplicates.Count() > 0);
         }
         //returns true if some client was kicked
-        public async Task<bool> KickUser(string shortID)
+        public bool KickUser(string shortID)
         {
             foreach (var clientID in WebSocketServices["/Connect"].Sessions.ActiveIDs)
             {

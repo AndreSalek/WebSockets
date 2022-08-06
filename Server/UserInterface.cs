@@ -10,8 +10,8 @@ namespace Server
     {
         Server server;
         public bool menuExited = false;
-                
-       
+        public int idLength = 4;
+
         public UserInterface(Server server)
         {
             this.server = server;
@@ -54,10 +54,9 @@ namespace Server
                     {
                         Console.WriteLine("What's the client's ID?");
                         string id = Console.ReadLine().ToString().ToLower().Trim();
-                        if (!(id.Length == server.idLength)) goto default;
-                        Task<bool> kicked = Task.Run(async () => await server.KickUser(id));
-                        Console.WriteLine(kicked.Result);
-                        if (kicked.Result)
+                        if (!(id.Length == idLength)) goto default;
+                        bool kicked = server.KickUser(id);
+                        if (kicked)
                         {
                             Console.WriteLine("Client kicked");
                         }
@@ -73,9 +72,9 @@ namespace Server
                         Console.WriteLine("Cannot use this function while offline");
                         break;
                     }
-                    if (!(args[1].Length == server.idLength)) goto default;
-                    Task<bool> kicked1 = Task.Run(async () => await server.KickUser(args[1]));
-                    if (kicked1.Result)
+                    if (!(args[1].Length == idLength)) goto default;
+                    bool kicked1 = server.KickUser(args[1]);
+                    if (kicked1)
                     {
                         Console.WriteLine("Client kicked");
                     }
@@ -85,29 +84,29 @@ namespace Server
                 case "list":
                     try
                     {
-                        Task<string[]> shortIDs = server.CreateShortIDArrayAsync();
-                        Task<bool> hasDuplicates = server.CheckforDuplicatesAsync(shortIDs.Result);
+                        IEnumerable<string> shortIDs = server.CreateShortIDArray(idLength);
+                        bool hasDuplicates = server.CheckforDuplicates(shortIDs);
                         if (server.GetServerState() == "offline")
                         {
                             Console.WriteLine("Cannot use this function while offline");
                             break;
                         }
                         if (args.Length >= 2) goto default;
-                        if (hasDuplicates.Result)
+                        if (hasDuplicates)
                         {
-                            server.idLength += 1;
+                            idLength += 1;
                             goto case "list";
                         }
-                        Console.WriteLine($"Number of active clients: {shortIDs.Result.Length}");
-                        foreach (var shortID in shortIDs.Result)
+                        Console.WriteLine($"Number of active clients: {shortIDs.Count()}");
+                        foreach (var shortID in shortIDs)
                         {
                             Console.WriteLine(shortID);
                         }
-                        server.idLength = 4;
+                        idLength = 4;
                     }
                     catch (Exception ex)
                     {
-                        Console.WriteLine("Cannot list connected clients");
+                        Console.WriteLine("Cannot list connected clients \n" +ex);
                     }
                     
                     break;

@@ -20,7 +20,7 @@ namespace Server
 
         protected override void OnError(ErrorEventArgs e)
         {
-            Console.WriteLine("Error");
+            Console.WriteLine("Error \n" + e.Message);
         }
         protected override void OnMessage(MessageEventArgs e)
         {
