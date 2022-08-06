@@ -77,7 +77,7 @@ namespace Server
             {
                 if (clientID.StartsWith(shortID))
                 {
-                    WebSocketServices["/Connect"].Sessions.CloseSession(clientID, 1008, "kicked");
+                    WebSocketServices["/Connect"].Sessions.CloseSession(clientID, 1008, "Disconnected by server.");
                     return true;
                 }
             }

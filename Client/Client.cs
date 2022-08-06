@@ -13,9 +13,7 @@ namespace Client
     {
         private Timer timer;
         private int reconnectCount = 0;
-        public bool kicked = false;
-        public bool disconnectedManually;
-
+        public bool disconnectedManually = false;
         public event EventHandler ClientStateChange;
         public Client() : base("ws://localhost:8000/Connect")
         {
@@ -24,7 +22,6 @@ namespace Client
             OnClose += Client_OnClose;
             OnError += Client_OnError;
             OnOpen += Client_OnOpen;
-            
         }
 
         private void Client_OnOpen(object sender, EventArgs e)
@@ -37,17 +34,6 @@ namespace Client
         {
             Console.WriteLine("Error");
         }
-
-        protected virtual void OnClientStateChange(object sender, EventArgs e)
-        {
-            Console.WriteLine($"Client state changed to { GetClientState() }");
-            ClientStateChange?.Invoke(this, EventArgs.Empty);
-        }
-        public string GetClientState()
-        {
-            var stateString = (IsAlive) ? "online" : "offline";
-            return stateString;
-        }
         private void Client_OnMessage(object sender, MessageEventArgs e)
         {
             Console.WriteLine($"Server returned: \n {e.Data}");
@@ -57,9 +43,8 @@ namespace Client
         {
             //determine whether client was kicked, Checking for this e.code because I used this one on server to disconnect from session
             OnClientStateChange(this, EventArgs.Empty);
-            kicked = (e.Code == 1008) ? true : false;
-            
-            if (!kicked)
+            disconnectedManually = (e.Code == 1008) ? true : false;
+            if (!disconnectedManually)
             {
                 //setup and start timer to attempt reconnection
                 SetTimer();
@@ -67,10 +52,23 @@ namespace Client
             }
             else
             {
-                //if client was kicked, reconnect will not be started
-                Console.WriteLine("You have been kicked by the server.");
+                OnClientStateChange(this, EventArgs.Empty);
+                Console.WriteLine("You have been disconnected by the server.");
             }
         }
+
+        protected virtual void OnClientStateChange(object sender, EventArgs e)
+        {
+            Console.WriteLine($"Client state changed to { GetClientState() }");
+            ClientStateChange?.Invoke(this, EventArgs.Empty);
+        }
+        
+        public string GetClientState()
+        {
+            var stateString = (IsAlive) ? "online" : "offline";
+            return stateString;
+        }
+       
         //timer settings
         private void SetTimer()
         {
@@ -89,11 +87,7 @@ namespace Client
                 timer.Dispose();
                 return;
             }
-            else
-            {
-
-            }
-            if (reconnectCount == 10 && ReadyState == (WebSocketState)3)
+            else if (reconnectCount == 10 && ReadyState == WebSocketState.Closed)
             {
                 Console.WriteLine("Cannot connect to server");
                 timer.Dispose();

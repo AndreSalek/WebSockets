@@ -21,11 +21,11 @@ namespace Client
         //main loop
         public void menuLoop()
         {
-            while (!menuExited)
+            while (!menuExited || !client.disconnectedManually)
             {
+                if (client.disconnectedManually) menuExited = true;
                 string command = Console.ReadLine().ToString().ToLower().Trim();
                 MenuSwitch(command);
-                if (client.kicked) menuExited = true;
             }
         }
         
@@ -39,7 +39,6 @@ namespace Client
                 client.Close();
             }
             else client.Connect();
-            client.disconnectedManually = true;
         }
 
         private void GetMenuOptions()
@@ -88,9 +87,9 @@ namespace Client
                     GetMenuOptions();
                     break;
                 default:
-                    Console.WriteLine("Command does not exist or is invalid");
+                    Console.WriteLine("Command does not exist.");
                     break;
             }
         }
     }
-}
+}                                                                                                                                           
