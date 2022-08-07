@@ -42,7 +42,7 @@ namespace Server
             var stateString = (IsListening) ? "online" : "offline";
             return stateString;
         }
-        //Creates new array of short IDs that are needed for console output
+        //Returns collection of short IDs that are needed for console output
         public IEnumerable<string> CreateShortIDArray(int idLength)
         {
             foreach (var client in WebSocketServices["/Connect"].Sessions.ActiveIDs)
@@ -50,8 +50,8 @@ namespace Server
                 yield return client.Remove(idLength);
             }
         }
-        //Input string array, returns true if it contains any duplicates
-        public bool CheckforDuplicates(IEnumerable<string> array)
+        //Input collection, returns true of it has duplicates 
+        public bool CheckforDuplicates(IEnumerable<T> array)
         {
             var duplicates = array
              .GroupBy(p => p)
